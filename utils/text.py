@@ -3,14 +3,17 @@ import math
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
-"""
-Transform a text in a 'bag of words' with words occurrences.
-The first component of the tuple is the set of words, and the second
-component is the occurrences (words, occurrences).
-"""
 
+def bag_of_words(documents: list) -> (set, list):
+    """
+    Transform a text in a 'bag of words' with words occurrences.
+    The first component of the tuple is the set of words, and the second
+    component is the occurrences (words, occurrences).
+    """
 
-def bag_of_words(text: str) -> (set, list):
+    # Join all documents in a line and transform to lowercase
+    text = (' '.join(documents)).lower()
+
     # Load spanish stop words
     stop_words = set(stopwords.words('spanish'))
 
@@ -27,12 +30,11 @@ def bag_of_words(text: str) -> (set, list):
     return words, occurrences
 
 
-"""
-Get the similarity between words vectors.
-"""
-
-
 def similarity_words(v: list, w: list) -> float:
+    """
+    Get the similarity between words vectors.
+    """
+
     if len(v) != len(w):
         raise ValueError("Both vectors must be have same length")
 
@@ -43,6 +45,32 @@ def similarity_words(v: list, w: list) -> float:
     return vw / (v_sqrt * w_sqrt)
 
 
-_, occurrences = bag_of_words("Juan quiere comprar un coche. Ana no quiere comprar ningún coche.")
+def tf(word: str, document: str) -> int:
+    """
+    Get occurrences of word in document (tf).
+    """
+    return document.lower().count(word.lower())
 
-print(similarity_words(occurrences, occurrences))
+
+def df(word: str, documents: list) -> int:
+    """
+    Get numbers of documents where appears the word (df).
+    """
+    return sum([1 for document in documents if tf(word, document) > 0])
+
+
+def idf(word: str, documents: list) -> float:
+    """
+    Get inverse documentary frequency of the word.
+    """
+    n = len(documents)
+    res_df = df(word, documents)
+    return math.log(n / res_df, 10)
+
+
+def tfidf(word: str, document: str, documents: list) -> float:
+    """
+    Get weight of the word in a specific document.
+    """
+    return tf(word, document) * idf(word, documents)
+
