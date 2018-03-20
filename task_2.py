@@ -172,11 +172,36 @@ class NaiveBayesMultinomial():
                 
         return contador / len(self.entrenamiento)
     
+    
     # P(t|c) es la proporcion de ocurrencias de t en todos los documentos de la categoria c 
     # (respecto de todas las ocurrencias de todos los terminos del vocabulario)
-    def proporcion_ocurrencias_texto(self, texto, categoria):
-        pass
+    def proporcion_ocurrencias_texto(self, palabra, categoria, k):
+        conjunto_filtrado = [x for x in self.entrenamiento if x[0] == categoria]
         
+        counts = dict()
+        total_words = 0
+        total_words_category = 0
+        
+        for frase in conjunto_filtrado:
+            
+            words = frase[1].split()
+            
+            for word in words:
+                if word in counts:
+                    counts[word] += 1
+                else:
+                    counts[word] = 1
+            
+            # Aumento el contador de palabras iguales
+            if counts.get(palabra) != None and counts.get(palabra) != 0:
+                total_words += counts.get(palabra)
+                
+            # Total de palabras en el conjunto de entrenamiento filtrado por la categoría
+            total_words_category += len(frase[1].split())
+                
+        # Total de palabras en el conjunto de entrenamiento sin filtrar (|V|)
+        
+        return total_words / total_words_category
     
     # Imprime las categorías y el conjunto de entrenamiento
     def imprime(self):
