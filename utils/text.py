@@ -2,7 +2,7 @@ import string
 import math
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-from nltk.stem.snowball import SpanishStemmer
+from nltk.stem.snowball import SpanishStemmer, SnowballStemmer
 
 
 def bag_of_words(documents: list) -> (set, list):
@@ -42,6 +42,10 @@ def similarity_words(v: list, w: list) -> float:
     vw = sum([a * b for a, b in zip(v, w)])
     v_sqrt = math.sqrt(sum([math.pow(a, 2) for a in v]))
     w_sqrt = math.sqrt(sum([math.pow(a, 2) for a in w]))
+
+    # Si alguno de los vectores es cero, entonces no hay ninguna similitud
+    if v_sqrt == 0 or w_sqrt == 0:
+        return 0
 
     return vw / (v_sqrt * w_sqrt)
 
@@ -84,3 +88,13 @@ def stemming(word: str) -> str:
     """
     return SpanishStemmer().stem(word.lower())
 
+
+def stemmer_tokenizer(text: str) -> list:
+    """
+    Simply function that returns words of text tokenized.
+    :param text:
+    :return:
+    """
+    stemmer = SnowballStemmer('english')
+
+    return [stemmer.stem(token) for token in word_tokenize(text)]

@@ -1,11 +1,11 @@
 from sklearn.datasets import fetch_20newsgroups
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
-from nltk.stem.snowball import SnowballStemmer
-from nltk import word_tokenize
 
 from time import time
-import numpy as np
+from operator import itemgetter
+
+import utils.text as ut
 
 ########################################################################################################################
 
@@ -27,31 +27,13 @@ categories = [
     'sci.space'
 ]
 
-print('Cargando el dataset de 20 newsgroups para las siguientes categorias:')
+print('Cargando el dataset de twenty_newsgroups para las siguientes categorias:')
 print(categories)
 
 # Cogemos todos los grupos de post, de las categorias dadas, de forma aleatoria eliminando cabeces, pies y citas.
 dataset = fetch_20newsgroups(
     subset='all', categories=categories, shuffle=True, random_state=42, remove=('headers', 'footers', 'quotes')
 )
-
-# Obtenemos el número total de etiquetas diferentes
-labels = dataset.target
-unique_labels = np.unique(labels).shape[0]
-
-print('Terminado en %fs' % (time() - t0))
-print()
-
-########################################################################################################################
-
-t0 = time()
-
-print('Realizamos el stemming de los posts del datasets')
-
-stemmer = SnowballStemmer('english')
-
-for i, data in enumerate(dataset.data):
-    dataset.data[i] = ' '.join([stemmer.stem(token) for token in word_tokenize(data)])
 
 print('Terminado en %fs' % (time() - t0))
 print()
@@ -79,19 +61,22 @@ stop_words = 'english'
 use_idf = True
 
 # Creamos un vector tfidf con las siguientes características
-vectorizer = TfidfVectorizer(max_df=max_df, min_df=min_df, stop_words=stop_words, use_idf=use_idf)
+vectorizer = TfidfVectorizer(
+    # max_df=max_df, min_df=min_df, stop_words=stop_words, use_idf=use_idf, tokenizer=ut.stemmer_tokenizer
+    max_df=max_df, min_df=min_df, stop_words=stop_words, use_idf=use_idf
+)
 
 # Entrenamos el vector y transformamos los datos en un vector numérico
-x = vectorizer.fit_transform(dataset.data)
+x_train = vectorizer.fit_transform(dataset.data)
 
 print('Terminado en %fs' % (time() - t0))
-print('Nº de ejemplos: %d, Nº de características: %d' % x.shape)
+print('Nº de ejemplos: %d, Nº de características: %d' % x_train.shape)
 print()
 
 ########################################################################################################################
 
 t0 = time()
-test = ['I\'m working with Windows for the IA subject.']
+test = ['I\'m working with Windows for the IA subject.', 'I\'m working with Windows for the IA subject.']
 print('Vectorizamos el conjunto de prueba')
 
 # Pasamos el conjunto de test a un vector numérico con la información previa entrenada, de esta forma tendremos las
@@ -108,9 +93,9 @@ t0 = time()
 print('Realizamos el algoritmo K-media, para organizar por clústeres')
 
 # Ahora realizamos el algoritmo K-medias para optimizar la ejecución del problema y dar un conjunto de datos donde se
-# clasifique nuestro conjunto de entrenamiento
-k_means = KMeans(n_clusters=unique_labels)
-k_means.fit(x)
+# clasifique nuestro conjunto de entrenamiento.
+k_means = KMeans(n_clusters=50)
+k_means.fit(x_train)
 
 print('Terminado en %fs' % (time() - t0))
 print('Nº de centros: %d, Nº de características: %d' % k_means.cluster_centers_.shape)
@@ -131,20 +116,46 @@ print()
 ########################################################################################################################
 
 t0 = time()
-print('Sacamos los 10 "mejores" términos los clústers predichos: %s' % prediction)
+print('Sacamos los 10 posts más parecidos a los mencionados por el usuario.')
 
-# Ordenamos los centros y nos quedamos con el predicho
-order_centroid = k_means.cluster_centers_.argsort()[:, ::-1]
-total_centers = len(order_centroid)
+posts = dict()
+for i, center in enumerate(prediction):
+    for j, label in enumerate(k_means.labels_):
 
-# Obtenemos todas las palabras vectorizadas
-terms = vectorizer.get_feature_names()
+        if center == label:
 
-for i in prediction:
-    print('Cluster %d:' % i)
-    for j in order_centroid[i, :10]:
-        print(' %s' % terms[j], end='')
+            # Obtenemos la similitud entre la frase del conjunto de prueba, y la del conjunto de entrenamiento
+            sim = ut.similarity_words(x_test[i].toarray()[0], x_train[j].toarray()[0])
+
+            if i in posts:
+                values = posts.get(i)
+                values.append((j, sim))
+                posts.update({i: values})
+            else:
+                posts.update({i: [(j, sim)]})
+
+# Por cada texto de prueba
+for center in posts:
+
+    # Sacamos el cluster al que pertenece
+    cluster = prediction[center]
+
+    # Sacamos las palabras ordenadas de mayor a menor de forma eficiente
+    labels = sorted(posts.get(center), key=itemgetter(1), reverse=True)
+
+    print('Para el texto de prueba: ')
+    print(test[center])
     print()
+
+    print('Se han encontrado las siguientes textos más similares:')
+
+    # Textos mostrados
+    texts_showed = 3
+
+    # Nos quedamos con las x primeros y los mostramos
+    for key, sim in labels[:texts_showed]:
+        print(dataset.data[key])
+        print('-------------------------------------------------------------------------------------------------------')
 
 print('Terminado en %fs' % (time() - t0))
 print()
