@@ -2,6 +2,7 @@ import string
 import math
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+from nltk.stem.snowball import SpanishStemmer
 
 
 def bag_of_words(documents: list) -> (set, list):
@@ -73,4 +74,13 @@ def tfidf(word: str, document: str, documents: list) -> float:
     Get weight of the word in a specific document.
     """
     return tf(word, document) * idf(word, documents)
+
+
+def stemming(word: str) -> str:
+    """
+    Simply function to transform a word to a stem of that word (In Spanish)
+    :param word: str
+    :return stem of word: str
+    """
+    return SpanishStemmer().stem(word.lower())
 
