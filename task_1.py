@@ -1,7 +1,9 @@
 from sklearn.datasets import fetch_20newsgroups
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.model_selection import GridSearchCV
+from nltk.stem.snowball import SnowballStemmer
+from nltk import word_tokenize
+
 from time import time
 import numpy as np
 
@@ -9,7 +11,10 @@ import numpy as np
 
 tt = time()
 
+print('')
+
 ########################################################################################################################
+
 t0 = time()
 
 # Categorias a cargar
@@ -22,7 +27,6 @@ categories = [
     'sci.space'
 ]
 
-print('')
 print('Cargando el dataset de 20 newsgroups para las siguientes categorias:')
 print(categories)
 
@@ -34,6 +38,20 @@ dataset = fetch_20newsgroups(
 # Obtenemos el número total de etiquetas diferentes
 labels = dataset.target
 unique_labels = np.unique(labels).shape[0]
+
+print('Terminado en %fs' % (time() - t0))
+print()
+
+########################################################################################################################
+
+t0 = time()
+
+print('Realizamos el stemming de los posts del datasets')
+
+stemmer = SnowballStemmer('english')
+
+for i, data in enumerate(dataset.data):
+    dataset.data[i] = ' '.join([stemmer.stem(token) for token in word_tokenize(data)])
 
 print('Terminado en %fs' % (time() - t0))
 print()
