@@ -5,6 +5,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from time import time
 from operator import itemgetter
 
+import numpy as np
 import utils.text as ut
 
 ########################################################################################################################
@@ -128,20 +129,18 @@ texts_showed = 3
 print('Sacamos los %d posts más parecidos a los mencionados por el usuario.' % texts_showed)
 
 posts = dict()
-for i, center in enumerate(prediction):
-    for j, label in enumerate(k_means.labels_):
+for center_index, center in enumerate(prediction):
+    for label_index in np.where(k_means.labels_ == center)[0]:
 
-        if center == label:
+        # Obtenemos la similitud entre la frase del conjunto de prueba, y la del conjunto de entrenamiento
+        sim = ut.similarity_words(x_test[center_index].toarray()[0], x_train[label_index].toarray()[0])
 
-            # Obtenemos la similitud entre la frase del conjunto de prueba, y la del conjunto de entrenamiento
-            sim = ut.similarity_words(x_test[i].toarray()[0], x_train[j].toarray()[0])
-
-            if i in posts:
-                values = posts.get(i)
-                values.append((j, sim))
-                posts.update({i: values})
-            else:
-                posts.update({i: [(j, sim)]})
+        if center_index in posts:
+            values = posts.get(center_index)
+            values.append((label_index, sim))
+            posts.update({center_index: values})
+        else:
+            posts.update({center_index: [(label_index, sim)]})
 
 # Por cada texto de prueba
 for center in posts:
