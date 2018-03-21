@@ -62,8 +62,7 @@ use_idf = True
 
 # Creamos un vector tfidf con las siguientes características
 vectorizer = TfidfVectorizer(
-    # max_df=max_df, min_df=min_df, stop_words=stop_words, use_idf=use_idf, tokenizer=ut.stemmer_tokenizer
-    max_df=max_df, min_df=min_df, stop_words=stop_words, use_idf=use_idf
+    max_df=max_df, min_df=min_df, stop_words=stop_words, use_idf=use_idf, tokenizer=ut.stemmer_tokenizer
 )
 
 # Entrenamos el vector y transformamos los datos en un vector numérico
@@ -76,7 +75,7 @@ print()
 ########################################################################################################################
 
 t0 = time()
-test = ['I\'m working with Windows for the IA subject.', 'I\'m working with Windows for the IA subject.']
+test = ['I\'m working with Windows for the IA subject.', 'New nvidia GTX2048 in shops, for only 10000$']
 print('Vectorizamos el conjunto de prueba')
 
 # Pasamos el conjunto de test a un vector numérico con la información previa entrenada, de esta forma tendremos las
@@ -93,8 +92,14 @@ t0 = time()
 print('Realizamos el algoritmo K-media, para organizar por clústeres')
 
 # Ahora realizamos el algoritmo K-medias para optimizar la ejecución del problema y dar un conjunto de datos donde se
-# clasifique nuestro conjunto de entrenamiento.
-k_means = KMeans(n_clusters=50)
+# clasifique nuestro conjunto de entrenamiento. Se han probado diferentes tamaños de clústeres:
+# 10 --> 141s
+# 20 --> 116s
+# 30 --> 149s
+# 40 --> 128s
+# 50 --> 343s
+# dando como mejor resultado y más rápido 20 clústeres.
+k_means = KMeans(n_clusters=20)
 k_means.fit(x_train)
 
 print('Terminado en %fs' % (time() - t0))
@@ -116,7 +121,11 @@ print()
 ########################################################################################################################
 
 t0 = time()
-print('Sacamos los 10 posts más parecidos a los mencionados por el usuario.')
+
+# Textos que vamos a mostrar
+texts_showed = 3
+
+print('Sacamos los %d posts más parecidos a los mencionados por el usuario.' % texts_showed)
 
 posts = dict()
 for i, center in enumerate(prediction):
@@ -148,9 +157,6 @@ for center in posts:
     print()
 
     print('Se han encontrado las siguientes textos más similares:')
-
-    # Textos mostrados
-    texts_showed = 3
 
     # Nos quedamos con las x primeros y los mostramos
     for key, sim in labels[:texts_showed]:
