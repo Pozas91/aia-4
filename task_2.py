@@ -162,6 +162,17 @@ class NaiveBayesMultinomial():
             ['sociedad', 'Inmensidad de datos']
         ]
     
+    
+    # Total de palabras en el conjunto de entrenamiento sin filtrar (|V|)
+    def count_total_words(self):
+        total_words = 0
+            
+        for frase in self.entrenamiento:
+            total_words += len(frase[1].split())
+            
+        return total_words
+    
+    
     # P(c) se estima como Nc/N , donde Nc es el numero de documentos de la categoria c 
     # y N el numero total de documentos en el conjunto de entrenamiento.
     def probabilidad_documentos_por_categoria(self, categoria):
@@ -198,10 +209,12 @@ class NaiveBayesMultinomial():
                 
             # Total de palabras en el conjunto de entrenamiento filtrado por la categoría
             total_words_category += len(frase[1].split())
-                
-        # Total de palabras en el conjunto de entrenamiento sin filtrar (|V|)
-        
+            
+            if k != 0:
+                (total_words + k) / (total_words_category + k * count_total_words())
+            
         return total_words / total_words_category
+        
     
     # Imprime las categorías y el conjunto de entrenamiento
     def imprime(self):
