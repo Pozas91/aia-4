@@ -264,6 +264,7 @@ class NaiveBayesMultinomial():
         NaiveBayesMultinomial().logPTC()
     
     
+    # Esta función es utilizada para predecir un titular
     def predict(self, titular):
         
         best_score = 0
@@ -299,11 +300,84 @@ class NaiveBayesMultinomial():
                 best_score = total_sum_by_category
                 best_category = categoria
                 
-        print('El titular se ha clasificado como: {0}'.format(best_category))
+        #print('El titular se ha clasificado como: {0}'.format(best_category))
         
+        return best_category
+    
+    
+    # Esta función cambia el valor de k por defecto
+    def cambiar_valor_k(self, k):
+        self.k = k
+        
+    
+    # Porcentaje de aciertos
+    def calcular_porcentaje_aciertos(self, conjunto_prueba):
+        total_aciertos = 0
+        clasificados_correctamente = []
+        clasificados_incorrectamente = []
+        
+        for titular in conjunto_prueba:
+            categoria = NaiveBayes.predict(titular[1])
+            
+            if categoria == titular[0]:
+                total_aciertos += 1
+                clasificados_correctamente.append([categoria,titular[1]])
+            else:
+                clasificados_incorrectamente.append([categoria, titular[1]])
+                
+        porcentaje_aciertos = total_aciertos / len(conjunto_prueba)
+        
+        print('Titulares clasificados correctamente: ')
+        for titular in clasificados_correctamente:
+            print('- Clasificado: {0}; Titular: {1}'.format(titular[0], titular[1]))
+        
+        print('')
+        print('')
+        
+        print('Titulares clasificados incorrectamente: '.format(clasificados_incorrectamente))
+        for titular in clasificados_incorrectamente:
+            print('- Clasificado: {0}; Titular: {1}'.format(titular[0], titular[1]))
+        
+        print('')
+        print('')
+        
+        print('Porcentaje de aciertos: {0}% ({1}/{2})'.format(porcentaje_aciertos, total_aciertos, len(conjunto_prueba)))
+    
     
     # Imprime las categorías y el conjunto de entrenamiento
     def imprime(self):
         print('Categorías: {0}'.format(self.categorias))
         print('Conjunto de entrenamiento: {0}'.format(self.entrenamiento))
         print('Tamaño conjunto de entrenamiento: {0}'.format(len(self.entrenamiento)))
+        
+        
+        
+# =============================================================================
+# PRUEBAS TASK 2
+# =============================================================================
+NaiveBayes = NaiveBayesMultinomial()
+
+
+# =============================================================================
+# ENTRENAMIENTO
+# =============================================================================
+NaiveBayes.logPTC()
+NaiveBayes.logP()
+
+# =============================================================================
+# PREDECIMOS
+# =============================================================================
+conjunto_prueba = [
+            ['deporte', '¿Frenar a Douglas Costa o pensar en el Mundial? Casemiro no duda: "Le parto en dos"'],
+            ['politica', 'Esquerra Unida, todavía sin coordinadora: la militancia se divide entre Rosa Pérez y Rosa Albert'],
+            ['deporte', 'Florentino: "Si tienes un amigo en Hong Kong, le preguntas por Hong Kong"'],
+            ['politica', 'Rivera sobre la manifestación del 8M: "Todo el mundo estuvo junto y unido para defender la libertad y la igualdad de las mujeres"'],
+            ['sociedad', 'El Gobierno confirma para abril un trasvase del Tajo al Segura'],
+            ['sociedad', 'Un mensaje de Whatsapp enviado por error acaba en boda'],
+            ['sociedad', 'El catalán se usará de modo «prioritario» en «todos los ámbitos» de la Universidad de las Islas Baleares'],
+            ['sociedad', 'Ciudad del Cabo, la primera gran urbe que se enfrenta a vivir sin agua'],
+            ['deporte', 'Javi Fernández abandera a España en el adiós a los «Juegos de la Paz»'],
+            ['politica', 'Rivera sobre la manifestación del 8M: "Todo el mundo estuvo junto y unido para defender la libertad y la igualdad de las mujeres"'],
+        ]
+
+NaiveBayes.calcular_porcentaje_aciertos(conjunto_prueba)
