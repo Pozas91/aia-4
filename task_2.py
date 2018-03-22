@@ -1,6 +1,3 @@
-from utils import text
-
-
 # =============================================================================
 # CLASIFICADOR Naive Bayes Multinomial
 # =============================================================================
@@ -8,6 +5,7 @@ from utils import text
 class NaiveBayesMultinomial():
     
     def __init__(self):
+        self.k = 0
         self.categorias = ['politica', 'deporte', 'sociedad']
         self.entrenamiento = [
             ['politica', 'Jordi Sànchez anuncia ante el Supremo su disposición a dejar el escaño'],
@@ -162,6 +160,34 @@ class NaiveBayesMultinomial():
             ['sociedad', 'Inmensidad de datos']
         ]
     
+    
+    # Total de palabras en el conjunto de entrenamiento sin filtrar (|V|)
+    def count_total_words(self):
+        total_words = 0
+        
+        for frase in self.entrenamiento:
+            total_words += len(frase[1].split())
+            
+        return total_words
+    
+    
+    # Devuelve un diccionario con todas las palabras que se encuentran en el conjunto de entrenamiento
+    def total_words(self):
+        total_words = dict()
+        
+        for frase in self.entrenamiento:
+            
+            words = frase[1].split()
+            
+            for word in words:
+                if word in total_words:
+                    total_words[word] += 1
+                else:
+                    total_words[word] = 1
+            
+        return total_words
+    
+    
     # P(c) se estima como Nc/N , donde Nc es el numero de documentos de la categoria c 
     # y N el numero total de documentos en el conjunto de entrenamiento.
     def probabilidad_documentos_por_categoria(self, categoria):
@@ -175,12 +201,13 @@ class NaiveBayesMultinomial():
     
     # P(t|c) es la proporcion de ocurrencias de t en todos los documentos de la categoria c 
     # (respecto de todas las ocurrencias de todos los terminos del vocabulario)
-    def proporcion_ocurrencias_texto(self, palabra, categoria, k):
+    def proporcion_ocurrencias_texto(self, palabra, categoria):
         conjunto_filtrado = [x for x in self.entrenamiento if x[0] == categoria]
         
         counts = dict()
         total_words = 0
         total_words_category = 0
+        probabilidad = 0
         
         for frase in conjunto_filtrado:
             
@@ -198,10 +225,82 @@ class NaiveBayesMultinomial():
                 
             # Total de palabras en el conjunto de entrenamiento filtrado por la categoría
             total_words_category += len(frase[1].split())
-                
-        # Total de palabras en el conjunto de entrenamiento sin filtrar (|V|)
+            
+            if self.k != 0:
+                probabilidad = (total_words + self.k) / (total_words_category + self.k * NaiveBayesMultinomial().count_total_words())
+            else:
+                probabilidad = total_words / total_words_category
+            
+        return probabilidad
         
-        return total_words / total_words_category
+    
+    
+    def logP(self):
+        p_categorias = []
+        
+        for categoria in self.categorias:
+            p_categorias.append(NaiveBayesMultinomial().probabilidad_documentos_por_categoria(categoria))
+            
+        self.logP = p_categorias
+        
+    
+    def logPTC(self):
+        p_categorias = []
+        
+        for categoria in self.categorias:
+            total_words = NaiveBayesMultinomial().total_words()
+            word_by_category = dict()
+            
+            for word in total_words:
+                word_by_category[word] = NaiveBayesMultinomial().proporcion_ocurrencias_texto(word, categoria)
+                
+            p_categorias.append(word_by_category)
+            
+        self.logPTC = p_categorias
+        
+    
+    def entrenamiento(self):
+        NaiveBayesMultinomial().logP()
+        NaiveBayesMultinomial().logPTC()
+    
+    
+    def predict(self, titular):
+        
+        best_score = 0
+        best_category = ''
+        
+        for categoria in self.categorias:
+            
+            logP = 0
+            logPTC = 0
+            
+            if categoria == 'politica':
+                logP = self.logP[0]
+            elif categoria == 'deporte':
+                logP = self.logP[1]
+            else:
+                logP = self.logP[2]
+            
+            for word in titular.split():
+                
+                if categoria == 'politica':
+                    if self.logPTC[0].get(word) is not None and self.logPTC[0].get(word) != 0:
+                        logPTC += self.logPTC[0].get(word)
+                elif categoria == 'deporte':
+                    if self.logPTC[1].get(word) is not None and self.logPTC[1].get(word) != 0:
+                        logPTC += self.logPTC[1].get(word)
+                else:
+                    if self.logPTC[2].get(word) is not None and self.logPTC[2].get(word) != 0:
+                        logPTC += self.logPTC[2].get(word)
+                    
+            total_sum_by_category = logP + logPTC
+            
+            if total_sum_by_category > best_score:
+                best_score = total_sum_by_category
+                best_category = categoria
+                
+        print('El titular se ha clasificado como: {0}'.format(best_category))
+        
     
     # Imprime las categorías y el conjunto de entrenamiento
     def imprime(self):
