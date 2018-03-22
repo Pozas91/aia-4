@@ -17,10 +17,10 @@ NaiveBayes.logP()
 # PREDECIMOS
 # =============================================================================
 
-NaiveBayes.predict('Rajoy gana las elecciones')
+NaiveBayes.predict('¿Frenar a Douglas Costa o pensar en el Mundial? Casemiro no duda: "Le parto en dos"')
 
-NaiveBayes.predict('Baloncesto deporte estrella')
+NaiveBayes.predict('Esquerra Unida, todavía sin coordinadora: la militancia se divide entre Rosa Pérez y Rosa Albert')
 
-NaiveBayes.predict('McLaren estaría por delante de Renault')
+NaiveBayes.predict('Florentino: "Si tienes un amigo en Hong Kong, le preguntas por Hong Kong"')
 
 NaiveBayes.predict('Rivera sobre la manifestación del 8M: "Todo el mundo estuvo junto y unido para defender la libertad y la igualdad de las mujeres"')
