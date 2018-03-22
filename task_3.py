@@ -22,6 +22,7 @@ movie_data = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(__file__))
 
 x = list()
 y = list()
+target_names = ['Negativo', 'Positivo']
 
 for values in movie_data.values:
     review, sentiment = values
@@ -35,9 +36,10 @@ print()
 
 t0 = time()
 
-print('Sacamos por validación cruzada el conjunto de entrenamiento y el de pruebas', end=' ')
+print('Sacamos por validación cruzada el conjunto de entrenamiento y el de pruebas...', end=' ')
 
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.20)
+x_sample = ['Iron man movie it\'s fantastic.', 'The movie is a little bored.']
 
 print('terminado en {0:.2f}s'.format(time() - t0))
 print()
@@ -61,6 +63,7 @@ vectorizer = TfidfVectorizer(ngram_range=(1, 3), stop_words='english')
 
 x_vectorizer_train = vectorizer.fit_transform(x_train)
 x_vectorizer_test = vectorizer.transform(x_test)
+x_vectorizer_sample = vectorizer.transform(x_sample)
 
 print('terminado en {0:.2f}s'.format(time() - t0))
 print()
@@ -91,11 +94,19 @@ t0 = time()
 print('Clasificamos y mostramos el rendimiento del Multinomial de Naive Bayes')
 
 # Clasificamos los vectores del conjunto de prueba
-gs_mnb.predict(x_vectorizer_test)
+prediction = gs_mnb.predict(x_vectorizer_sample)
+
+# Clasificamos los comentarios de ejemplo introducidos
+for i, predict in enumerate(prediction):
+    print('El comentario:')
+    print('\t {0}'.format(x_sample[i]))
+    print('\t Es {0}'.format(target_names[predict]))
+    print()
 
 # Comprobamos el rendimiento obtenido
 score_gs_mnb = gs_mnb.score(x_vectorizer_test, y_test)
 
+print('Los datos del clasificador son:')
 print('\t El rendimiento con el conjunto entrenado es del {0:.2f}%'.format(score_gs_mnb * 100))
 print('\t Los mejores parámetros seleccionados son: {0}'.format(gs_mnb.best_params_))
 
